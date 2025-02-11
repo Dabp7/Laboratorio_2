@@ -1,0 +1,464 @@
+{
+	"info": {
+		"_postman_id": "0fb4db6f-eefd-4a8a-9222-338c03093b1b",
+		"name": "API-2020527",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38160952"
+	},
+	"item": [
+		{
+			"name": "Usuario",
+			"item": [
+				{
+					"name": "Agregar Usuario",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Devyn",
+									"type": "text"
+								},
+								{
+									"key": "surname",
+									"value": "Gomez",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "dev_vynn",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "ddGomez@gmail.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "dBercian1!",
+									"type": "text"
+								},
+								{
+									"key": "profilePicture",
+									"type": "file",
+									"src": "/C:/Users/gaber/Downloads/809110622402248754.png"
+								},
+								{
+									"key": "phone",
+									"value": "14597651",
+									"type": "text"
+								},
+								{
+									"key": "role",
+									"value": "USER_ROLE",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/auth/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar foto",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "profilePicture",
+									"type": "file",
+									"src": "/C:/Users/gaber/Downloads/552.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/user/updateProfilePicture/67aa9e587420da1aadbc39e1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"user",
+								"updateProfilePicture",
+								"67aa9e587420da1aadbc39e1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Usuario",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/user/findUser/67aaad41559141e6cd73b987",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"user",
+								"findUser",
+								"67aaad41559141e6cd73b987"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Usuarios",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/user/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"user",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Usuario",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/user/deleteUser/67aa9e587420da1aadbc39e1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"user",
+								"deleteUser",
+								"67aa9e587420da1aadbc39e1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar usuario",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Diego\",\r\n    \"surname\": \"Bercian\",\r\n    \"phone\": \"49099817\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/user/updateUser/67aaad41559141e6cd73b987",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"user",
+								"updateUser",
+								"67aaad41559141e6cd73b987"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Citas",
+			"item": [
+				{
+					"name": "Agregar Cita",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"date\": \"2025-04-07T15:30:09.444+00:00\",\r\n    \"pet\": \"67aaa19c7420da1aadbc39e4\",\r\n    \"user\": \"67aa9e587420da1aadbc39e1\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/appointment/createAppointment",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"appointment",
+								"createAppointment"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Citas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/appointment/67aa9e587420da1aadbc39e1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"appointment",
+								"67aa9e587420da1aadbc39e1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancelar Cita",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/appointment/appointmentCancelled/67aaa1df7420da1aadbc39e8",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"appointment",
+								"appointmentCancelled",
+								"67aaa1df7420da1aadbc39e8"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Cita",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"newDate\": \"2025-11-07T15:30:09.444+00:00\"\r\n}   ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/appointment/updateDate/67aaa3b57420da1aadbc39fa",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"appointment",
+								"updateDate",
+								"67aaa3b57420da1aadbc39fa"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Mascotas",
+			"item": [
+				{
+					"name": "Agregar Mascota",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\r\n    \"name\": \"Gato\",\r\n    \"description\": \"Gato negro\",\r\n    \"age\": 4,\r\n    \"type\": \"Siames\",\r\n    \"email\": \"dGomez@gmail.com\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/pet/addPet",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"pet",
+								"addPet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Mascotas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/pet/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"pet",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Mascota",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/pet/findPet/67aaa19c7420da1aadbc39e4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"pet",
+								"findPet",
+								"67aaa19c7420da1aadbc39e4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar mascota",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Gato Blanco\",\r\n    \"description\": \"Gato de color blanco\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/pet/updatePet/67aaa19c7420da1aadbc39e4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"pet",
+								"updatePet",
+								"67aaa19c7420da1aadbc39e4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Mascota",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/adoptionSystem/v1/pet/deletePet/67aaa19c7420da1aadbc39e4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"adoptionSystem",
+								"v1",
+								"pet",
+								"deletePet",
+								"67aaa19c7420da1aadbc39e4"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
