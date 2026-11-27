@@ -1,4 +1,5 @@
-import {mkdirSync} from "node:fs";
+import {mkdir} from "node:fs";
+import {randomUUID} from 'node:crypto';
 import multer from "multer";
 import { dirname, extname, join } from "path";
 import { fileURLToPath } from "url"
@@ -12,13 +13,16 @@ const createMulterConfig = (destinationFolder) => {
         storage: multer.diskStorage({
             destination: (req, file, cb) => {
                 const fullPath = join(CURRENT_DIR, destinationFolder)
-                req.filePath = fullPath
-                cb(null, fullPath)
+                mkdir(fullPath, {recursive:true}, error => {
+                    if (error) return cb(error)
+                    req.filePath = fullPath
+                    cb(null, fullPath)
+                })
             },
             filename: (req, file, cb) => {
                 const fileExtension = extname(file.originalname)
                 const fileName = file.originalname.split(fileExtension)[0]
-                cb(null, `${fileName}-${Date.now()}${fileExtension}`)
+                cb(null, `${fileName}-${randomUUID()}${fileExtension}`)
             }   
         }),
         fileFilter:(req, file, cb) => {
