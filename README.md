@@ -32,6 +32,6 @@ Desactivar mascota cancela citas activas en una transacción. La agenda y la baj
 
 ## Pruebas
 npm test levanta un replica set MongoDB real temporal y prueba carreras de reservas/reprogramaciones, cancelación, permisos, datos del propietario y fechas inválidas.
-La primera ejecución descarga un binario oficial; un mongod instalado puede usarse con MONGOMS_SYSTEM_BINARY. El timeout de arranque admite equipos lentos. CI ejecuta la misma suite.
+La instalación npm ci no descarga MongoDB. La primera ejecución de las pruebas descarga el binario oficial 8.0.16 elegido por la suite; un mongod instalado puede usarse con MONGOMS_SYSTEM_BINARY. El timeout de arranque admite equipos lentos. CI ejecuta la misma suite.
 .env, dumps e imágenes subidas se excluyen del árbol versionado. Credenciales históricas reales requieren rotación en su servicio.
 La demo conserva su alcance académico; no es un sistema de agenda médica ni tiene pagos.

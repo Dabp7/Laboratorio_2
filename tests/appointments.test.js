@@ -8,6 +8,9 @@ import {createApp} from '../configs/server.js';
 import User from '../src/user/user.model.js';
 import Pet from '../src/pet/pet.model.js';
 import Appointment from '../src/appointment/appointment.model.js';
+import {access,readdir,unlink,rmdir,readFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {randomUUID} from 'node:crypto';
 let mongo,app,alice,bob,admin,pet,otherPet,aliceToken,bobToken,adminToken,date;
 process.env.SECRETORPRIVATEKEY='synthetic-test-only-secret-more-than-32-characters';
 const auth=token=>({Authorization:'Bearer '+token});
@@ -86,4 +89,40 @@ test('catalog exposes no keeper contact; invalid tokens and role escalation are 
     assert.equal((await User.findById(alice.id)).role,'USER_ROLE');
     assert.equal(update.body.user.password,undefined);
     assert.equal((await request(app).get('/adoptionSystem/v1/user/').set(auth(adminToken))).status,200);
+});
+
+test('profile image upload creates its destination on a clean checkout',async()=>{
+    const folder=resolve('public/uploads/profile-pictures');
+    const existed=await access(folder).then(()=>true,()=>false);
+    const prefix='regression-'+randomUUID();
+    const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ9sAAAAASUVORK5CYII=','base64');
+    try{
+        const response=await request(app).patch('/adoptionSystem/v1/user/updateProfilePicture/'+alice.id).set(auth(aliceToken)).attach('profilePicture',png,{filename:prefix+'.png',contentType:'image/png'});
+        assert.equal(response.status,200);
+        const stored=await User.findById(alice.id);
+        assert.match(stored.profilePicture,new RegExp('^'+prefix));
+        assert.deepEqual(await readFile(resolve(folder,stored.profilePicture)),png);
+    }finally{
+        for(const name of await readdir(folder).catch(()=>[]))if(name.startsWith(prefix))await unlink(resolve(folder,name));
+        if(!existed)await rmdir(folder).catch(error=>{if(!['ENOENT','ENOTEMPTY'].includes(error.code))throw error;});
+    }
+});
+
+test('two accounts uploading the same filename in one millisecond keep separate image files',async context=>{
+    const folder=resolve('public/uploads/profile-pictures');
+    const existed=await access(folder).then(()=>true,()=>false);
+    const prefix='regression-'+randomUUID();
+    const first=Buffer.from('synthetic first image');const second=Buffer.from('synthetic second image');
+    context.mock.method(Date,'now',()=>1795824000000);
+    try{
+        const responses=await Promise.all([[alice,aliceToken,first],[bob,bobToken,second]].map(([user,token,bytes])=>request(app).patch('/adoptionSystem/v1/user/updateProfilePicture/'+user.id).set(auth(token)).attach('profilePicture',bytes,{filename:prefix+'.png',contentType:'image/png'})));
+        assert.deepEqual(responses.map(response=>response.status),[200,200]);
+        const [storedAlice,storedBob]=await Promise.all([User.findById(alice.id),User.findById(bob.id)]);
+        assert.notEqual(storedAlice.profilePicture,storedBob.profilePicture);
+        assert.deepEqual(await readFile(resolve(folder,storedAlice.profilePicture)),first);
+        assert.deepEqual(await readFile(resolve(folder,storedBob.profilePicture)),second);
+    }finally{
+        for(const name of await readdir(folder).catch(()=>[]))if(name.startsWith(prefix))await unlink(resolve(folder,name));
+        if(!existed)await rmdir(folder).catch(error=>{if(!['ENOENT','ENOTEMPTY'].includes(error.code))throw error;});
+    }
 });
