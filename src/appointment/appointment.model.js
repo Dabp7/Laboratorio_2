@@ -26,4 +26,6 @@ const appointmentSchema = Schema({
     versionKey: false,
 });
 
+appointmentSchema.index({ pet: 1, date: 1 }, { unique: true, partialFilterExpression: { status: { $in: ['CREATED', 'ACCEPTED'] } } });
+appointmentSchema.index({ user: 1, date: 1 }, { unique: true, partialFilterExpression: { status: { $in: ['CREATED', 'ACCEPTED'] } } });
 export default model('Appointment', appointmentSchema);

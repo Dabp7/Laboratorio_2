@@ -1,21 +1,13 @@
-import { Router } from "express"
-import { getUserById, getUsers, deleteUser, updatePassword, updateUser, updateProfilePicture } from "./user.controller.js"
-import { getUserByIdValidator, deleteUserValidator, updatePasswordValidator, updateUserValidator, updateProfilePictureValidator } from "../middlewares/user-validators.js"
-import { uploadProfilePicture } from "../middlewares/multer-uploads.js"
-
-const router = Router()
-
-router.get("/findUser/:uid", getUserByIdValidator, getUserById)
-
-router.get("/", getUsers)
-
-router.delete("/deleteUser/:uid", deleteUserValidator, deleteUser)
-
-router.patch("/updatePassword/:uid", updatePasswordValidator, updatePassword)
-
-router.put("/updateUser/:uid", updateUserValidator, updateUser)
-
-router.patch("/updateProfilePicture/:uid", uploadProfilePicture.single("profilePicture"),
-updateProfilePictureValidator, updateProfilePicture)
-
-export default router
+import {Router} from 'express';
+import {getUserById,getUsers,deleteUser,updatePassword,updateUser,updateProfilePicture} from './user.controller.js';
+import {uploadProfilePicture} from '../middlewares/multer-uploads.js';
+import {validateJWT,requireAdmin,ownUser} from '../middlewares/validate-jwt.js';
+const router=Router();
+router.use(validateJWT);
+router.get('/',requireAdmin,getUsers);
+router.get('/findUser/:uid',ownUser,getUserById);
+router.delete('/deleteUser/:uid',ownUser,deleteUser);
+router.patch('/updatePassword/:uid',ownUser,updatePassword);
+router.put('/updateUser/:uid',ownUser,updateUser);
+router.patch('/updateProfilePicture/:uid',ownUser,uploadProfilePicture.single('profilePicture'),updateProfilePicture);
+export default router;

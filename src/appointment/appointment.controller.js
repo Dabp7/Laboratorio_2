@@ -1,135 +1,63 @@
-import Pet from "../pet/pet.model.js";
-import User from "../user/user.model.js"
-import Appointment from "../appointment/appointment.model.js";
-import { parse } from "date-fns";
-
-export const saveAppointment = async (req, res) => {
-  try {
-    const data = req.body;
-
-    const isoDate = new Date(data.date);
-
-    if (isNaN(isoDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        msg: "Fecha inválida",
-      });
-    }
-
-    const pet = await Pet.findOne({ _id: data.pet });
-    if (!pet) {
-      return res.status(404).json({ 
-        success: false, 
-        msg: "No se encontró la mascota" 
-      });
-    }
-
-    const existAppointment = await Appointment.findOne({
-      pet: data.pet,
-      user: data.user,
-      date: {
-        $gte: new Date(isoDate).setHours(0, 0, 0, 0),
-        $lt: new Date(isoDate).setHours(23, 59, 59, 999),
-      },
-    });
-
-    if (existAppointment) {
-      return res.status(400).json({
-        success: false,
-        msg: "El usuario y la mascota ya tienen una cita para este día",
-      });
-    }
-
-    const appointment = new Appointment({ ...data, date: isoDate });
-    await appointment.save();
-
-    return res.status(200).json({
-      success: true,
-      msg: `Cita creada exitosamente en fecha ${data.date}`,
-    });
-    
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ 
-      success: false, 
-      msg: "Error al crear la cita", 
-      error 
-    }); 
-  }
+import mongoose from 'mongoose';
+import Pet from '../pet/pet.model.js';
+import User from '../user/user.model.js';
+import Appointment from './appointment.model.js';
+import {fail,errorResponse,page} from '../helpers/http.js';
+function slot(value) {
+    if(typeof value!=='string'||value.length>40||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value))fail(400,'Use an ISO timestamp with Z or UTC offset');
+    const [year,month,day]=value.slice(0,10).split('-').map(Number);
+    const calendar=new Date(Date.UTC(year,month-1,day));
+    if(calendar.getUTCFullYear()!==year||calendar.getUTCMonth()!==month-1||calendar.getUTCDate()!==day)fail(400,'Invalid calendar date');
+    const date=new Date(value);
+    if(!Number.isFinite(date.getTime())||date.getTime()<=Date.now()||date.getUTCMinutes()%30!==0||date.getUTCSeconds()!==0||date.getUTCMilliseconds()!==0)fail(400,'Appointments use future 30-minute UTC slots');
+    return date;
+}
+const ownerQuery=(req)=>req.usuario.role==='ADMIN_ROLE'?{}:{user:req.usuario._id};
+export const saveAppointment=async(req,res)=>{
+    try{
+        const date=slot(req.body.date);
+        if(!mongoose.isValidObjectId(req.body.pet))fail(400,'Invalid pet');
+        const userId=req.body.user??req.usuario.id;
+        if(req.usuario.role!=='ADMIN_ROLE'&&String(userId)!==req.usuario.id)fail(403,'Cannot book for another user');
+        if(!mongoose.isValidObjectId(userId))fail(400,'Invalid user');
+        if(!await User.exists({_id:userId,status:true}))fail(404,'User not found');
+        let appointment;
+        await mongoose.connection.transaction(async session=>{
+            const pet=await Pet.findOneAndUpdate({_id:req.body.pet,status:true},{$inc:{bookingVersion:1}},{new:true,session});
+            if(!pet)fail(404,'Pet unavailable');
+            [appointment]=await Appointment.create([{date,pet:pet._id,user:userId,status:'CREATED'}],{session});
+        });
+        return res.status(201).json({success:true,appointment});
+    }catch(error){return errorResponse(res,error);}
 };
-
-
-export const getAppointment = async(req, res) =>{
-  try{
-      const { uid }= req.params;
-      const user = await User.findById(uid) 
-      const { limite = 5, desde = 0} = req.query
-      const query = { status: "CREATED", user: uid }
-
-      const [total, appointment] = await Promise.all([
-          Appointment.countDocuments(query),
-          Appointment.find(query)
-              .skip(Number(desde))
-              .limit(Number(limite))
-      ])
-      
-      return res.status(200).json({
-          success: true,
-          total,
-          user,
-          appointment
-      })
-
-
-  }catch(err){
-      return res.status(500).json({
-          success: false,
-          message: "Error al obtener las citas",
-          error: err.message
-      })
-  }
-}
-
-export const deleteAppointment = async(req, res) =>{
-  try{
-      const { uid } = req.params
-
-      const appointment = await Appointment.findByIdAndUpdate(uid, {status: "CANCELLED"}, {new: true})
-      
-      return res.status(200).json({
-          success: true,
-          message: "Cita cancelada",
-          appointment
-      })
-
-
-  }catch(err){
-      return res.status(500).json({
-          success: false,
-          message: "Error al cancelar la cita",
-          error: err.message
-      })
-  }
-}
-
-export const updateDateAppointment = async(req, res) =>{
-  try{
-      const { uid } = req.params
-      const { newDate } = req.body
-
-       const dateUpdate  = await Appointment.findByIdAndUpdate(uid, {date: newDate}, {new: true})
-
-      return res.status(200).json({
-          success: true,
-          message: "Fecha actualizada",
-          dateUpdate
-      })
-
-  }catch(err){
-      return res.status(500).json({
-          success: false,
-          message: "Error al actualizar la fecha",
-          error: err.message
-      })
-  }
-}
+export const getAppointment=async(req,res)=>{
+    try{
+        if(req.usuario.role!=='ADMIN_ROLE'&&req.params.uid!==req.usuario.id)fail(403,'Cannot read another account');
+        if(!mongoose.isValidObjectId(req.params.uid))fail(400,'Invalid user');
+        const {limit,offset}=page(req.query);
+        const query={user:req.params.uid,status:{$in:['CREATED','ACCEPTED']}};
+        const [total,appointment]=await Promise.all([Appointment.countDocuments(query),Appointment.find(query).sort({date:1,_id:1}).skip(offset).limit(limit)]);
+        return res.json({success:true,total,appointment});
+    }catch(error){return errorResponse(res,error);}
+};
+export const deleteAppointment=async(req,res)=>{
+    try{
+        const appointment=await Appointment.findOneAndUpdate({_id:req.params.uid,...ownerQuery(req),status:{$in:['CREATED','ACCEPTED']}},{$set:{status:'CANCELLED'}},{new:true});
+        if(!appointment)fail(404,'Active appointment not found');
+        return res.json({success:true,message:'Appointment cancelled',appointment});
+    }catch(error){return errorResponse(res,error);}
+};
+export const updateDateAppointment=async(req,res)=>{
+    try{
+        const date=slot(req.body.newDate);
+        let dateUpdate;
+        await mongoose.connection.transaction(async session=>{
+            const appointment=await Appointment.findOne({_id:req.params.uid,...ownerQuery(req),status:{$in:['CREATED','ACCEPTED']}}).session(session);
+            if(!appointment)fail(404,'Active appointment not found');
+            const pet=await Pet.findOneAndUpdate({_id:appointment.pet,status:true},{$inc:{bookingVersion:1}},{new:true,session});
+            if(!pet)fail(409,'Pet unavailable');
+            appointment.date=date;dateUpdate=await appointment.save({session});
+        });
+        return res.json({success:true,dateUpdate});
+    }catch(error){return errorResponse(res,error);}
+};

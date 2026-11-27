@@ -1,104 +1,37 @@
-# API-2020527 - Sistema de Adopción de Mascotas
+# Laboratorio 2 — adopciones y citas
+Proyecto académico Node.js/Express/MongoDB. Catálogo de mascotas y reservas reproducibles con identidades ficticias.
 
-## Descripción
-API-2020527 es un sistema de adopción de mascotas que proporciona endpoints para la gestión de usuarios, mascotas y citas. Permite registrar usuarios, gestionar mascotas disponibles para adopción y programar citas para la adopción de una mascota.
+## Ejecutar
+Node22.15+ o24, npm y MongoDB8 replica set (Docker Compose opcional).
+```sh
+git clone https://github.com/Dabp7/Laboratorio_2.git
+cd Laboratorio_2
+npm ci
+docker compose up -d --wait
+cp .env.example .env
+npm run seed
+npm start
+```
+En PowerShell: Copy-Item .env.example .env. Configurar SECRETORPRIVATEKEY con32 caracteres o más.
+API http://127.0.0.1:3003; GET /health.
+Seed no destructivo solo adoption_demo: admin@example.test, alice@example.test y bob@example.test, contraseña Demo-password-123! Datos sintéticos.
 
-## Instalación
-1. Clonar el repositorio:
-   ```sh
-   git clone https://github.com/tu_usuario/tu_repositorio.git
-   ```
-2. Acceder al directorio del proyecto:
-   ```sh
-   cd tu_repositorio
-   ```
-3. Instalar dependencias:
-   ```sh
-   npm install
-   ```
-4. Configurar variables de entorno en un archivo `.env`.
-5. Iniciar el servidor:
-   ```sh
-   npm start
-   ```
+## Demo
+POST /adoptionSystem/v1/auth/login con email/password devuelve userDetails.token. Usar Authorization: Bearer en todas las rutas de mascotas, cuentas y citas.
+GET /adoptionSystem/v1/pet/ muestra catálogo sin contacto del propietario.
+POST /adoptionSystem/v1/appointment/createAppointment recibe pet y date; user se toma de la identidad, un admin puede elegirlo explícitamente.
+Ejemplo date: timestamp futuro ISO con Z u offset, minuto UTC00 o30, segundos cero. Cada slot dura30 minutos.
+GET /adoptionSystem/v1/appointment/:uid muestra citas activas propias (admin puede consultar otras).
+PATCH /adoptionSystem/v1/appointment/updateDate/:id con newDate reprograma.
+DELETE /adoptionSystem/v1/appointment/appointmentCancelled/:id cancela y libera el horario.
+Dos solicitudes concurrentes por la misma mascota y slot producen una creación201 y un conflicto409. Una persona tampoco puede reservar dos mascotas en el mismo slot.
 
-## Endpoints Disponibles
-### Usuarios
-- **Agregar Usuario** (POST)
-  - URL: `http://localhost:3001/adoptionSystem/v1/auth/register`
-  - Parámetros:
-    - `name`: Nombre del usuario
-    - `surname`: Apellido del usuario
-    - `username`: Nombre de usuario
-    - `email`: Correo electrónico
-    - `password`: Contraseña
-    - `profilePicture`: Imagen de perfil
-    - `phone`: Teléfono
-    - `role`: Rol del usuario
+## Permisos
+Un usuario administra su perfil y mascotas. Cambiar contraseña requiere oldPassword y newPassword de12..128 caracteres. El perfil no modifica rol/status/password. Un admin puede administrar catálogo y consultar cuentas. El registro público siempre crea USER_ROLE.
+Desactivar mascota cancela citas activas en una transacción. La agenda y la baja requieren replica set. Datos históricos incompatibles con los índices deben revisarse antes de arrancar; no se eliminan automáticamente.
 
-- **Actualizar Foto de Perfil** (PATCH)
-  - URL: `http://localhost:3001/adoptionSystem/v1/user/updateProfilePicture/{id}`
-  - Parámetros:
-    - `profilePicture`: Nueva imagen de perfil
-
-- **Buscar Usuario** (GET)
-  - URL: `http://localhost:3001/adoptionSystem/v1/user/findUser/{id}`
-
-- **Listar Usuarios** (GET)
-  - URL: `http://localhost:3001/adoptionSystem/v1/user/`
-
-- **Eliminar Usuario** (DELETE)
-  - URL: `http://localhost:3001/adoptionSystem/v1/user/deleteUser/{id}`
-
-- **Actualizar Usuario** (PUT)
-  - URL: `http://localhost:3001/adoptionSystem/v1/user/updateUser/{id}`
-  - Parámetros:
-    - `name`: Nuevo nombre
-    - `surname`: Nuevo apellido
-    - `phone`: Nuevo teléfono
-
-### Citas
-- **Agregar Cita** (POST)
-  - URL: `http://localhost:3001/adoptionSystem/v1/appointment/createAppointment`
-  - Parámetros:
-    - `date`: Fecha de la cita
-    - `pet`: ID de la mascota
-    - `user`: ID del usuario
-
-- **Listar Citas** (GET)
-  - URL: `http://localhost:3001/adoptionSystem/v1/appointment/{userId}`
-
-- **Cancelar Cita** (DELETE)
-  - URL: `http://localhost:3001/adoptionSystem/v1/appointment/appointmentCancelled/{id}`
-
-- **Actualizar Cita** (PATCH)
-  - URL: `http://localhost:3001/adoptionSystem/v1/appointment/updateDate/{id}`
-  - Parámetros:
-    - `newDate`: Nueva fecha de la cita
-
-### Mascotas
-- **Agregar Mascota** (POST)
-  - URL: `http://localhost:3001/adoptionSystem/v1/pet/addPet`
-  - Parámetros:
-    - `name`: Nombre de la mascota
-    - `description`: Descripción
-    - `age`: Edad
-    - `type`: Tipo de mascota
-    - `email`: Email del responsable
-
-- **Listar Mascotas** (GET)
-  - URL: `http://localhost:3001/adoptionSystem/v1/pet/`
-
-- **Buscar Mascota** (GET)
-  - URL: `http://localhost:3001/adoptionSystem/v1/pet/findPet/{id}`
-
-- **Actualizar Mascota** (PUT)
-  - URL: `http://localhost:3001/adoptionSystem/v1/pet/updatePet/{id}`
-  - Parámetros:
-    - `name`: Nuevo nombre
-    - `description`: Nueva descripción
-
-- **Eliminar Mascota** (DELETE)
-  - URL: `http://localhost:3001/adoptionSystem/v1/pet/deletePet/{id}`
-
-
+## Pruebas
+npm test levanta un replica set MongoDB real temporal y prueba carreras de reservas/reprogramaciones, cancelación, permisos, datos del propietario y fechas inválidas.
+La primera ejecución descarga un binario oficial; un mongod instalado puede usarse con MONGOMS_SYSTEM_BINARY. El timeout de arranque admite equipos lentos. CI ejecuta la misma suite.
+.env, dumps e imágenes subidas se excluyen del árbol versionado. Credenciales históricas reales requieren rotación en su servicio.
+La demo conserva su alcance académico; no es un sistema de agenda médica ni tiene pagos.

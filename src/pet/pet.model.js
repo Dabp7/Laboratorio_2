@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 
 const petSchema = new Schema({
+    bookingVersion: { type: Number, default: 0 },
     name: {
         type: String,
         required: true
