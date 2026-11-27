@@ -12,3 +12,6 @@ Windows10, Node22.15.0, npm10.9.2 y MongoDB8.0.8 real en replica set temporal.
 - El catálogo no expone contacto del propietario y el perfil no eleva privilegios.
 
 El binario se reutilizó con MONGOMS_SYSTEM_BINARY y versión comprobada externamente; la suite creó y limpió sus propios datos temporales. No usó la base personal.
+
+Arranque desde una base vacía: seed, proceso real `node index.js`, health, login y catálogo con una mascota aprobados. El servidor espera todos los índices antes de escuchar y desconecta la base si falla el arranque.
+`npm audit --omit=dev`: cero vulnerabilidades.

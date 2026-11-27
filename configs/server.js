@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -17,6 +18,7 @@ export function createApp(){
 }
 export async function initServer(){
     if(!process.env.SECRETORPRIVATEKEY||process.env.SECRETORPRIVATEKEY.length<32)throw new Error('Set SECRETORPRIVATEKEY with 32 characters or more');
-    await dbConnection();await Appointment.init();
+    await dbConnection();
+    await Promise.all(Object.values(mongoose.models).map(model => model.init()));await Appointment.init();
     return createApp().listen(Number(process.env.PORT||3003),'127.0.0.1',()=>console.log('Adoption demo ready'));
 }
