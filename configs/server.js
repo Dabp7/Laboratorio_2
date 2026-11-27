@@ -1,51 +1,22 @@
-"use strict"
-
-import express from "express"
-import cors from "cors"
-import helmet from "helmet"
-import morgan from "morgan"
-import { dbConnection } from "./mongo.js"
-import authRoutes from "../src/auth/auth.routes.js"
-import userRoutes from "../src/user/user.routes.js"
-import petRoutes from "../src/pet/pet.routes.js"
-import appointmentRoutes from "../src/appointment/appointment.routes.js"
-import apiLimiter from "../src/middlewares/rate-limit-validator.js"
-
-const middlewares = (app) => {
-    app.use(express.urlencoded({extended: false}))
-    app.use(express.json())
-    app.use(cors())
-    app.use(helmet())
-    app.use(morgan("dev"))
-    app.use(apiLimiter)
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import {dbConnection} from './mongo.js';
+import authRoutes from '../src/auth/auth.routes.js';
+import userRoutes from '../src/user/user.routes.js';
+import petRoutes from '../src/pet/pet.routes.js';
+import appointmentRoutes from '../src/appointment/appointment.routes.js';
+import Appointment from '../src/appointment/appointment.model.js';
+export function createApp(){
+    const app=express();
+    app.use(express.json({limit:'128kb'}),cors(),helmet());
+    app.get('/health',(_req,res)=>res.json({status:'ok'}));
+    for(const [name,router] of Object.entries({auth:authRoutes,user:userRoutes,pet:petRoutes,appointment:appointmentRoutes}))app.use('/adoptionSystem/v1/'+name,router);
+    app.use((error,_req,res,_next)=>res.status(error.status===400?400:500).json({success:false,message:error.status===400?'Invalid body':'Internal server error'}));
+    return app;
 }
-
-const routes = (app) =>{
-    app.use("/adoptionSystem/v1/auth", authRoutes)
-    app.use("/adoptionSystem/v1/user", userRoutes)
-    app.use("/adoptionSystem/v1/pet", petRoutes)
-    app.use("/adoptionSystem/v1/appointment", appointmentRoutes)
+export async function initServer(){
+    if(!process.env.SECRETORPRIVATEKEY||process.env.SECRETORPRIVATEKEY.length<32)throw new Error('Set SECRETORPRIVATEKEY with 32 characters or more');
+    await dbConnection();await Appointment.init();
+    return createApp().listen(Number(process.env.PORT||3003),'127.0.0.1',()=>console.log('Adoption demo ready'));
 }
-
-const conectarDB = async () =>{
-    try{
-        await dbConnection()
-    }catch(err){
-        console.log(`Database connection failed: ${err}`)
-        process.exit(1)
-    }
-}
-
-export const initServer = () => {
-    const app = express()
-    try{
-        middlewares(app)
-        conectarDB()
-        routes(app)
-        app.listen(process.env.PORT)
-        console.log(`Server running on port ${process.env.PORT}`)
-    }catch(err){
-        console.log(`Server init failed: ${err}`)
-    }
-}
-
